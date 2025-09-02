@@ -167,6 +167,17 @@ const StatBar = ({ label, value, maxValue, color, isHp = false }) => (
   </div>
 );
 
+// --- Footer Component ---
+const Footer = () => (
+  <footer className="text-center py-6 mt-12 border-t border-gray-700/50">
+    <p className="text-gray-400 text-sm">Dibuat menggunakan React & PokéAPI.</p>
+    <p className="text-gray-500 text-xs mt-1">
+      Simple Minigame Pokemon By Google Gemini &{" "}
+      <a href="https://instagram.com/jo.gidion">@jo.gidion</a>.
+    </p>
+  </footer>
+);
+
 // --- Main App Component ---
 function App() {
   // PENTING: Jika latar belakang Anda masih putih,
@@ -557,6 +568,7 @@ function App() {
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     </>
   );

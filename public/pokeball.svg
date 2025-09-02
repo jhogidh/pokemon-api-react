@@ -1,0 +1,8 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid">
+  <g>
+    <path fill="#F44336" d="M128 128H16a112 112 0 0 1 224 0h-112z"/>
+    <path fill="#FFFFFF" d="M128 128h112a112 112 0 0 1-224 0h112z"/>
+    <path fill="#37474F" d="M128 152a24 24 0 1 1 0-48a24 24 0 0 1 0 48z"/>
+    <path fill="#FFFFFF" d="M128 144a16 16 0 1 1 0-32a16 16 0 0 1 0 32z"/>
+  </g>
+</svg>
