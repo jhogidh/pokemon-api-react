@@ -92,16 +92,15 @@ const PokemonCard = ({ pokemon, animationState, battleStats }) => {
 
   return (
     <div
-      className={`bg-gray-800 p-4 rounded-2xl shadow-lg transition-all duration-300 border-4 ${
+      className={`bg-gray-800 w-64 p-4 rounded-2xl shadow-lg transition-all duration-300 border-4 flex flex-col ${
         battleStats.isSelected
           ? "border-yellow-400 scale-105"
           : "border-gray-700"
       } ${battleStats.isOpponent ? "border-red-500" : ""} ${animationClass()}`}
     >
-      {/* Top section for types and image */}
-      <div className="relative mb-2">
-        {/* Type Badges */}
-        <div className="absolute top-0 left-0 flex gap-1 z-10">
+      {/* Image Container with Types */}
+      <div className="relative bg-gray-900/50 rounded-xl h-36 mb-3">
+        <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-10">
           {pokemon.types.map(({ type }) => (
             <span
               key={type.name}
@@ -113,24 +112,22 @@ const PokemonCard = ({ pokemon, animationState, battleStats }) => {
             </span>
           ))}
         </div>
-
-        {/* Image Container */}
-        <div className="h-28 flex justify-center items-center">
+        <div className="flex items-center justify-center h-full">
           <img
             src={pokemon.sprites.front_default}
             alt={pokemon.name}
-            className="max-w-full max-h-full drop-shadow-lg"
+            className="h-32 w-32 drop-shadow-lg"
           />
         </div>
       </div>
 
       {/* Name */}
-      <h2 className="text-xl sm:text-2xl font-bold capitalize text-center text-white mb-4">
+      <h2 className="text-xl font-bold capitalize text-center text-white mb-3">
         {pokemon.name}
       </h2>
 
       {/* Stats */}
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-sm mt-auto">
         <StatBar
           label="HP"
           value={battleStats.currentHp}
@@ -504,7 +501,7 @@ function App() {
                   }}
                 />
               ) : (
-                <div className="bg-gray-800/50 w-full h-full rounded-2xl flex items-center justify-center text-gray-500 border-4 border-dashed border-gray-700 min-h-[340px]">
+                <div className="bg-gray-800/50 w-64 h-[356px] rounded-2xl flex items-center justify-center text-gray-500 border-4 border-dashed border-gray-700">
                   <p>Pilih Pokemon untuk Bertarung</p>
                 </div>
               )}
