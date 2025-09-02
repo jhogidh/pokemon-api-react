@@ -1,24 +1,89 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 
-// --- Helper Components ---
+// --- DATA: Type Chart for Gen 1 ---
+const TYPE_CHART = {
+  normal: { not_very_effective: ["rock"], no_effect: ["ghost"] },
+  fire: {
+    super_effective: ["grass", "ice", "bug"],
+    not_very_effective: ["fire", "water", "rock", "dragon"],
+  },
+  water: {
+    super_effective: ["fire", "ground", "rock"],
+    not_very_effective: ["water", "grass", "dragon"],
+  },
+  electric: {
+    super_effective: ["water", "flying"],
+    not_very_effective: ["electric", "grass", "dragon"],
+    no_effect: ["ground"],
+  },
+  grass: {
+    super_effective: ["water", "ground", "rock"],
+    not_very_effective: ["fire", "grass", "poison", "flying", "bug", "dragon"],
+  },
+  ice: {
+    super_effective: ["grass", "ground", "flying", "dragon"],
+    not_very_effective: ["water", "ice"],
+  },
+  fighting: {
+    super_effective: ["normal", "ice", "rock"],
+    not_very_effective: ["poison", "flying", "psychic", "bug"],
+    no_effect: ["ghost"],
+  },
+  poison: {
+    super_effective: ["grass"],
+    not_very_effective: ["poison", "ground", "rock", "ghost"],
+  },
+  ground: {
+    super_effective: ["fire", "electric", "poison", "rock"],
+    not_very_effective: ["grass", "bug"],
+    no_effect: ["flying"],
+  },
+  flying: {
+    super_effective: ["grass", "fighting", "bug"],
+    not_very_effective: ["electric", "rock"],
+  },
+  psychic: {
+    super_effective: ["fighting", "poison"],
+    not_very_effective: ["psychic"],
+  },
+  bug: {
+    super_effective: ["grass", "poison", "psychic"],
+    not_very_effective: ["fire", "fighting", "flying", "ghost"],
+  },
+  rock: {
+    super_effective: ["fire", "ice", "flying", "bug"],
+    not_very_effective: ["fighting", "ground"],
+  },
+  ghost: {
+    super_effective: ["ghost"],
+    not_very_effective: ["psychic"],
+    no_effect: ["normal"],
+  },
+  dragon: { super_effective: ["dragon"] },
+};
 
-// Komponen untuk menampilkan kartu Pokemon
-const PokemonCard = ({
-  pokemon,
-  isSelected,
-  isOpponent = false,
-  animationState,
-}) => {
+const TYPE_COLORS = {
+  normal: "bg-gray-400",
+  fire: "bg-red-500",
+  water: "bg-blue-500",
+  electric: "bg-yellow-400",
+  grass: "bg-green-500",
+  ice: "bg-cyan-300",
+  fighting: "bg-orange-700",
+  poison: "bg-purple-600",
+  ground: "bg-yellow-600",
+  flying: "bg-indigo-400",
+  psychic: "bg-pink-500",
+  bug: "bg-lime-500",
+  rock: "bg-yellow-700",
+  ghost: "bg-indigo-800",
+  dragon: "bg-indigo-600",
+};
+
+// --- Helper Components ---
+const PokemonCard = ({ pokemon, animationState, battleStats }) => {
   if (!pokemon) return null;
 
-  const getStat = (statName) =>
-    pokemon.stats.find((s) => s.stat.name === statName)?.base_stat || 0;
-
-  const hp = getStat("hp");
-  const attack = getStat("attack");
-  const defense = getStat("defense");
-
-  // Menentukan kelas animasi berdasarkan state
   const animationClass = () => {
     if (animationState === "attacking") return "animate-attack";
     if (animationState === "taking-damage") return "animate-shake";
@@ -27,29 +92,61 @@ const PokemonCard = ({
 
   return (
     <div
-      className={`relative bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-lg transition-all duration-300 border-4 ${
-        isSelected ? "border-yellow-400 scale-105" : "border-gray-700"
-      } ${isOpponent ? "border-red-500" : ""} ${animationClass()}`}
+      className={`bg-gray-800 p-4 rounded-2xl shadow-lg transition-all duration-300 border-4 ${
+        battleStats.isSelected
+          ? "border-yellow-400 scale-105"
+          : "border-gray-700"
+      } ${battleStats.isOpponent ? "border-red-500" : ""} ${animationClass()}`}
     >
-      <img
-        src={pokemon.sprites.front_default}
-        alt={pokemon.name}
-        className="w-32 h-32 sm:w-40 sm:h-40 mx-auto -mt-12 mb-2 drop-shadow-lg"
-      />
+      {/* Top section for types and image */}
+      <div className="relative mb-2">
+        {/* Type Badges */}
+        <div className="absolute top-0 left-0 flex gap-1 z-10">
+          {pokemon.types.map(({ type }) => (
+            <span
+              key={type.name}
+              className={`px-2 py-1 text-xs font-bold text-white rounded-full ${
+                TYPE_COLORS[type.name] || "bg-gray-500"
+              }`}
+            >
+              {type.name.toUpperCase()}
+            </span>
+          ))}
+        </div>
+
+        {/* Image Container */}
+        <div className="h-28 flex justify-center items-center">
+          <img
+            src={pokemon.sprites.front_default}
+            alt={pokemon.name}
+            className="max-w-full max-h-full drop-shadow-lg"
+          />
+        </div>
+      </div>
+
+      {/* Name */}
       <h2 className="text-xl sm:text-2xl font-bold capitalize text-center text-white mb-4">
         {pokemon.name}
       </h2>
+
+      {/* Stats */}
       <div className="space-y-2 text-sm">
-        <StatBar label="HP" value={hp} maxValue={255} color="bg-green-500" />
+        <StatBar
+          label="HP"
+          value={battleStats.currentHp}
+          maxValue={battleStats.maxHp}
+          color="bg-green-500"
+          isHp={true}
+        />
         <StatBar
           label="Attack"
-          value={attack}
+          value={pokemon.stats.find((s) => s.stat.name === "attack").base_stat}
           maxValue={190}
           color="bg-red-500"
         />
         <StatBar
           label="Defense"
-          value={defense}
+          value={pokemon.stats.find((s) => s.stat.name === "defense").base_stat}
           maxValue={250}
           color="bg-blue-500"
         />
@@ -58,16 +155,15 @@ const PokemonCard = ({
   );
 };
 
-// Komponen untuk menampilkan bar statistik
-const StatBar = ({ label, value, maxValue, color }) => (
+const StatBar = ({ label, value, maxValue, color, isHp = false }) => (
   <div>
     <div className="flex justify-between font-semibold text-gray-300 mb-1">
       <span>{label}</span>
-      <span>{value}</span>
+      <span>{isHp ? `${value} / ${maxValue}` : value}</span>
     </div>
-    <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+    <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden border-2 border-gray-600">
       <div
-        className={`${color} h-3 rounded-full transition-all duration-500 ease-out`}
+        className={`h-full rounded-full transition-all duration-500 ease-out ${color}`}
         style={{ width: `${(value / maxValue) * 100}%` }}
       ></div>
     </div>
@@ -75,16 +171,24 @@ const StatBar = ({ label, value, maxValue, color }) => (
 );
 
 // --- Main App Component ---
-
 function App() {
+  // PENTING: Jika latar belakang Anda masih putih,
+  // periksa file src/index.css atau src/App.css Anda.
+  // Hapus semua aturan `background-color` dari tag `body` atau `html`
+  // agar latar belakang gradasi ini dapat terlihat.
+
   const [playerPokemonList, setPlayerPokemonList] = useState([]);
   const [selectedPlayerPokemon, setSelectedPlayerPokemon] = useState(null);
   const [opponentPokemon, setOpponentPokemon] = useState(null);
+  const [battleState, setBattleState] = useState({
+    playerHp: 0,
+    opponentHp: 0,
+  });
+  const [currentTurn, setCurrentTurn] = useState("player"); // 'player', 'opponent', 'gameOver'
   const [isLoading, setIsLoading] = useState(true);
   const [gameLog, setGameLog] = useState([
     { type: "system", text: "Selamat datang di Arena Pertarungan Pokémon!" },
   ]);
-  const [winner, setWinner] = useState(null);
   const [attackAnimation, setAttackAnimation] = useState({
     player: "idle",
     opponent: "idle",
@@ -94,30 +198,27 @@ function App() {
   const POKEAPI_BASE_URL = "https://pokeapi.co/api/v2/pokemon";
 
   useEffect(() => {
-    if (logContainerRef.current) {
+    if (logContainerRef.current)
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
-    }
   }, [gameLog]);
 
-  const fetchPokemonDetails = async (url) => {
-    const response = await fetch(url);
-    return await response.json();
-  };
+  const fetchPokemonDetails = async (url) => (await fetch(url)).json();
 
   useEffect(() => {
     const fetchInitialPokemon = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${POKEAPI_BASE_URL}?limit=12`);
-        const data = await response.json();
+        const { results } = await (
+          await fetch(`${POKEAPI_BASE_URL}?limit=12`)
+        ).json();
         const detailedList = await Promise.all(
-          data.results.map((p) => fetchPokemonDetails(p.url))
+          results.map((p) => fetchPokemonDetails(p.url))
         );
         setPlayerPokemonList(detailedList);
-        fetchNewOpponent();
+        await fetchNewOpponent();
       } catch (error) {
         console.error("Gagal mengambil data Pokemon:", error);
-        addLog("Gagal memuat Pokemon. Coba refresh halaman.", "error");
+        addLog("Gagal memuat Pokemon.", "error");
       } finally {
         setIsLoading(false);
       }
@@ -125,16 +226,138 @@ function App() {
     fetchInitialPokemon();
   }, []);
 
+  const playerMaxHp = useMemo(
+    () =>
+      selectedPlayerPokemon?.stats.find((s) => s.stat.name === "hp")
+        .base_stat || 0,
+    [selectedPlayerPokemon]
+  );
+  const opponentMaxHp = useMemo(
+    () =>
+      opponentPokemon?.stats.find((s) => s.stat.name === "hp").base_stat || 0,
+    [opponentPokemon]
+  );
+
+  useEffect(() => {
+    if (selectedPlayerPokemon && opponentPokemon) {
+      setBattleState({ playerHp: playerMaxHp, opponentHp: opponentMaxHp });
+      setCurrentTurn("player");
+      setGameLog([]);
+      addLog(
+        `Pertarungan dimulai! ${selectedPlayerPokemon.name} vs ${opponentPokemon.name}.`,
+        "system"
+      );
+    }
+  }, [selectedPlayerPokemon, opponentPokemon, playerMaxHp, opponentMaxHp]);
+
+  useEffect(() => {
+    if (currentTurn === "opponent" && battleState.opponentHp > 0) {
+      const timeout = setTimeout(opponentAttack, 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [currentTurn, battleState.opponentHp]);
+
+  const calculateTypeMultiplier = (attackerTypes, defenderTypes) => {
+    let multiplier = 1;
+    for (const aType of attackerTypes) {
+      const chart = TYPE_CHART[aType.type.name];
+      if (!chart) continue;
+      for (const dType of defenderTypes) {
+        if (chart.super_effective?.includes(dType.type.name)) multiplier *= 2;
+        if (chart.not_very_effective?.includes(dType.type.name))
+          multiplier *= 0.5;
+        if (chart.no_effect?.includes(dType.type.name)) return 0;
+      }
+    }
+    return multiplier;
+  };
+
+  const calculateDamage = (attacker, defender) => {
+    const attackerStats = attacker.stats;
+    const defenderStats = defender.stats;
+    const attack = attackerStats.find(
+      (s) => s.stat.name === "attack"
+    ).base_stat;
+    const defense = defenderStats.find(
+      (s) => s.stat.name === "defense"
+    ).base_stat;
+
+    const multiplier = calculateTypeMultiplier(attacker.types, defender.types);
+
+    if (multiplier > 1) addLog("Serangan ini sangat efektif!", "victory");
+    if (multiplier < 1 && multiplier > 0)
+      addLog("Serangan ini kurang efektif...", "info");
+    if (multiplier === 0) addLog("Serangan tidak berpengaruh...", "info");
+
+    const baseDamage = Math.floor(
+      (((2 * 50) / 5 + 2) * attack * 60) / defense / 50 + 2
+    );
+    return Math.floor(baseDamage * multiplier * (Math.random() * 0.15 + 0.85));
+  };
+
+  const handleAttack = () => {
+    if (currentTurn !== "player" || !selectedPlayerPokemon) return;
+
+    addLog(`${selectedPlayerPokemon.name} menyerang!`, "player-attack");
+    setAttackAnimation({ player: "attacking", opponent: "idle" });
+
+    setTimeout(() => {
+      const damage = calculateDamage(selectedPlayerPokemon, opponentPokemon);
+      const newOpponentHp = Math.max(0, battleState.opponentHp - damage);
+      setBattleState((prev) => ({ ...prev, opponentHp: newOpponentHp }));
+      setAttackAnimation({ player: "idle", opponent: "taking-damage" });
+      addLog(
+        `${opponentPokemon.name} menerima ${damage} kerusakan.`,
+        "opponent-damage"
+      );
+
+      setTimeout(() => {
+        setAttackAnimation({ player: "idle", opponent: "idle" });
+        if (newOpponentHp === 0) {
+          addLog(`${opponentPokemon.name} pingsan! Kamu menang!`, "victory");
+          setCurrentTurn("gameOver");
+        } else {
+          setCurrentTurn("opponent");
+        }
+      }, 500);
+    }, 600);
+  };
+
+  const opponentAttack = () => {
+    addLog(`${opponentPokemon.name} balas menyerang!`, "opponent-attack");
+    setAttackAnimation({ player: "idle", opponent: "attacking" });
+
+    setTimeout(() => {
+      const damage = calculateDamage(opponentPokemon, selectedPlayerPokemon);
+      const newPlayerHp = Math.max(0, battleState.playerHp - damage);
+      setBattleState((prev) => ({ ...prev, playerHp: newPlayerHp }));
+      setAttackAnimation({ player: "taking-damage", opponent: "idle" });
+      addLog(
+        `${selectedPlayerPokemon.name} menerima ${damage} kerusakan.`,
+        "player-damage"
+      );
+
+      setTimeout(() => {
+        setAttackAnimation({ player: "idle", opponent: "idle" });
+        if (newPlayerHp === 0) {
+          addLog(
+            `${selectedPlayerPokemon.name} pingsan! Kamu kalah!`,
+            "defeat"
+          );
+          setCurrentTurn("gameOver");
+        } else {
+          setCurrentTurn("player");
+        }
+      }, 500);
+    }, 600);
+  };
+
   const fetchNewOpponent = async () => {
     try {
       setIsLoading(true);
-      setWinner(null);
+      setCurrentTurn("gameOver");
       setSelectedPlayerPokemon(null);
-      setGameLog([]);
-      addLog(
-        "Lawan baru telah muncul! Pilih Pokemon-mu untuk bertarung.",
-        "system"
-      );
+      addLog("Mencari lawan baru...", "system");
       const randomId = Math.floor(Math.random() * 151) + 1;
       const opponentDetails = await fetchPokemonDetails(
         `${POKEAPI_BASE_URL}/${randomId}`
@@ -142,119 +365,13 @@ function App() {
       setOpponentPokemon(opponentDetails);
     } catch (error) {
       console.error("Gagal mengambil data lawan:", error);
-      addLog("Gagal mencari lawan baru.", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const addLog = (text, type = "info") => {
+  const addLog = (text, type = "info") =>
     setGameLog((prev) => [...prev, { type, text }]);
-  };
-
-  const pokemonStats = useMemo(() => {
-    const getStats = (pokemon) => {
-      if (!pokemon) return { hp: 0, attack: 0, defense: 0 };
-      const get = (name) =>
-        pokemon.stats.find((s) => s.stat.name === name)?.base_stat || 1;
-      return { hp: get("hp"), attack: get("attack"), defense: get("defense") };
-    };
-    return {
-      player: getStats(selectedPlayerPokemon),
-      opponent: getStats(opponentPokemon),
-    };
-  }, [selectedPlayerPokemon, opponentPokemon]);
-
-  const handleAttack = () => {
-    if (
-      !selectedPlayerPokemon ||
-      !opponentPokemon ||
-      winner ||
-      attackAnimation.player !== "idle"
-    )
-      return;
-
-    addLog(`--- Ronde Baru ---`, "system");
-
-    setTimeout(() => {
-      addLog(
-        `${selectedPlayerPokemon.name} menyerang ${opponentPokemon.name}!`,
-        "player-attack"
-      );
-      setAttackAnimation({ player: "attacking", opponent: "idle" });
-    }, 200);
-
-    setTimeout(() => {
-      setAttackAnimation({ player: "idle", opponent: "taking-damage" });
-      const playerDamage = Math.max(
-        1,
-        Math.floor(
-          pokemonStats.player.attack * 0.8 -
-            pokemonStats.opponent.defense * 0.5 +
-            (Math.random() * 10 - 5)
-        )
-      );
-      addLog(
-        `${opponentPokemon.name} menerima ${playerDamage} kerusakan.`,
-        "opponent-damage"
-      );
-    }, 800);
-
-    setTimeout(() => {
-      setAttackAnimation({ player: "idle", opponent: "idle" });
-    }, 1200);
-
-    setTimeout(() => {
-      addLog(`${opponentPokemon.name} balas menyerang!`, "opponent-attack");
-      setAttackAnimation({ player: "idle", opponent: "attacking" });
-    }, 1500);
-
-    setTimeout(() => {
-      setAttackAnimation({ player: "taking-damage", opponent: "idle" });
-      const opponentDamage = Math.max(
-        1,
-        Math.floor(
-          pokemonStats.opponent.attack * 0.8 -
-            pokemonStats.player.defense * 0.5 +
-            (Math.random() * 10 - 5)
-        )
-      );
-      addLog(
-        `${selectedPlayerPokemon.name} menerima ${opponentDamage} kerusakan.`,
-        "player-damage"
-      );
-    }, 2100);
-
-    setTimeout(() => {
-      const playerDamage = Math.max(
-        1,
-        Math.floor(
-          pokemonStats.player.attack * 0.8 - pokemonStats.opponent.defense * 0.5
-        )
-      );
-      const opponentDamage = Math.max(
-        1,
-        Math.floor(
-          pokemonStats.opponent.attack * 0.8 - pokemonStats.player.defense * 0.5
-        )
-      );
-      const playerTurnsToWin = Math.ceil(
-        pokemonStats.opponent.hp / playerDamage
-      );
-      const opponentTurnsToWin = Math.ceil(
-        pokemonStats.player.hp / opponentDamage
-      );
-
-      if (playerTurnsToWin <= opponentTurnsToWin) {
-        addLog(`${selectedPlayerPokemon.name} menang!`, "victory");
-        setWinner("player");
-      } else {
-        addLog(`${opponentPokemon.name} menang!`, "defeat");
-        setWinner("opponent");
-      }
-      setAttackAnimation({ player: "idle", opponent: "idle" });
-    }, 2500);
-  };
 
   const getLogStyle = (type) => {
     switch (type) {
@@ -278,10 +395,6 @@ function App() {
         return "text-gray-300";
     }
   };
-
-  if (isLoading && playerPokemonList.length === 0) {
-    // ... (Loading screen remains the same)
-  }
 
   return (
     <>
@@ -331,64 +444,68 @@ function App() {
           </header>
 
           <div className="flex flex-col md:grid md:grid-cols-3 gap-4 md:gap-8 items-center mb-8">
-            {/* Opponent Card (Tampil di atas pada mobile, di kanan pada desktop) */}
             <div className="flex justify-center transition-opacity duration-500 order-1 md:order-3 w-full">
-              {opponentPokemon ? (
+              {opponentPokemon && (
                 <PokemonCard
                   pokemon={opponentPokemon}
-                  isOpponent={true}
                   animationState={attackAnimation.opponent}
+                  battleStats={{
+                    isOpponent: true,
+                    currentHp: battleState.opponentHp,
+                    maxHp: opponentMaxHp,
+                  }}
                 />
-              ) : (
-                <div className="bg-gray-800/50 w-full max-w-sm h-72 rounded-2xl flex items-center justify-center text-gray-500 border-4 border-dashed border-gray-700">
-                  <p>Mencari lawan...</p>
-                </div>
               )}
             </div>
 
-            {/* Attack Button (Tampil di tengah) */}
             <div className="text-center order-2 md:order-2">
               <button
                 onClick={handleAttack}
-                disabled={
-                  !selectedPlayerPokemon ||
-                  !!winner ||
-                  attackAnimation.player !== "idle"
-                }
+                disabled={currentTurn !== "player" || !selectedPlayerPokemon}
                 className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transform hover:scale-105 transition-all duration-200 border-b-4 border-red-800 active:border-b-0"
               >
                 SERANG!
               </button>
-              {winner && (
+              {currentTurn === "gameOver" && battleState.playerHp > 0 && (
                 <div className="mt-6 animate-bounce">
-                  <p
-                    className={`text-2xl font-bold ${
-                      winner === "player" ? "text-green-400" : "text-red-400"
-                    }`}
-                  >
-                    {winner === "player" ? "KAMU MENANG!" : "KAMU KALAH!"}
+                  <p className="text-2xl font-bold text-green-400">
+                    KAMU MENANG!
                   </p>
                   <button
                     onClick={fetchNewOpponent}
-                    className="mt-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg transition-transform duration-200 hover:scale-110"
+                    className="mt-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg"
                   >
                     Cari Lawan Baru
                   </button>
                 </div>
               )}
+              {currentTurn === "gameOver" && battleState.playerHp === 0 && (
+                <div className="mt-6">
+                  <p className="text-2xl font-bold text-red-400">KAMU KALAH!</p>
+                  <button
+                    onClick={fetchNewOpponent}
+                    className="mt-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg"
+                  >
+                    Coba Lagi
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Player Card (Tampil di bawah pada mobile, di kiri pada desktop) */}
             <div className="flex justify-center transition-opacity duration-500 order-3 md:order-1 w-full">
               {selectedPlayerPokemon ? (
                 <PokemonCard
                   pokemon={selectedPlayerPokemon}
-                  isSelected={true}
                   animationState={attackAnimation.player}
+                  battleStats={{
+                    isSelected: true,
+                    currentHp: battleState.playerHp,
+                    maxHp: playerMaxHp,
+                  }}
                 />
               ) : (
-                <div className="bg-gray-800/50 w-full max-w-sm h-72 rounded-2xl flex items-center justify-center text-gray-500 border-4 border-dashed border-gray-700">
-                  <p>Pilih Pokemon dari daftar</p>
+                <div className="bg-gray-800/50 w-full h-full rounded-2xl flex items-center justify-center text-gray-500 border-4 border-dashed border-gray-700 min-h-[340px]">
+                  <p>Pilih Pokemon untuk Bertarung</p>
                 </div>
               )}
             </div>
@@ -401,7 +518,7 @@ function App() {
             {gameLog.map((log, index) => (
               <p
                 key={index}
-                className={`log-entary font-mono text-sm ${getLogStyle(
+                className={`log-entry font-mono text-sm ${getLogStyle(
                   log.type
                 )}`}
               >
@@ -419,7 +536,13 @@ function App() {
               {playerPokemonList.map((p) => (
                 <div
                   key={p.id}
-                  onClick={() => !winner && setSelectedPlayerPokemon(p)}
+                  onClick={() =>
+                    currentTurn === "gameOver"
+                      ? fetchNewOpponent().then(() =>
+                          setSelectedPlayerPokemon(p)
+                        )
+                      : setSelectedPlayerPokemon(p)
+                  }
                   className={`bg-gray-800 p-3 rounded-lg text-center cursor-pointer transition-all duration-200 hover:scale-105 hover:bg-gray-700 border-2 ${
                     selectedPlayerPokemon?.id === p.id
                       ? "border-yellow-400"
