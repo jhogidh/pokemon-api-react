@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 
 // --- DATA: Type Chart for Gen 1 ---
@@ -569,6 +570,7 @@ function App() {
           </div>
         </div>
         <Footer />
+        <Analytics />
       </div>
     </>
   );
